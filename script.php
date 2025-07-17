@@ -68,7 +68,7 @@ class plgautomsgsecureInstallerScript
 		return true;
     }
 	private function postinstall_cleanup() {
-        $helperFile = JPATH_SITE . '/libraries/cgsecure/Helper/Cgipcheck.php';
+        $helperFile = JPATH_SITE . '/libraries/cgsecure/src/Cgipcheck.php';
         if (!is_file($helperFile)) {
             echo "You need install CG Secure";
         }
@@ -134,7 +134,12 @@ class plgautomsgsecureInstallerScript
         $query->from($db->quoteName('#__extensions'));
         $query->where('name = "CGSecure Library"');
         $db->setQuery($query);
-        $manifest = json_decode($db->loadResult(), true);
+        $res = $db->loadResult();
+        if (!$res) {
+            echo "You need install CG Secure";
+            return false;
+        }
+        $manifest = json_decode($res, true);
         if ($manifest['version'] < $this->min_secure_version) {
             Factory::getApplication()->enqueueMessage(
                 'Incompatible CG Secure version : found  <strong>' . $manifest['version'] . '</strong>, Minimum <strong>' . $this->min_secure_version . '</strong>',
