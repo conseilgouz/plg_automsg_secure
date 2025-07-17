@@ -16,7 +16,8 @@ class plgautomsgsecureInstallerScript
 {
 	private $min_joomla_version      = '4.0.0';
 	private $min_php_version         = '7.4';
-	private $name                    = 'Plugin AUtoMsg Secure';
+    private $min_secure_version      = '3.5.0';
+	private $name                    = 'Plugin AutoMsg Secure';
 	private $exttype                 = 'plugin';
 	private $extname                 = 'secure';
 	private $previous_version        = '';
@@ -40,6 +41,10 @@ class plgautomsgsecureInstallerScript
 			$this->uninstallInstaller();
 			return false;
 		}
+        if (! $this->passMinimumSecureVersion()) {
+            $this->uninstallInstaller();
+            return false;
+        }
 		// To prevent installer from running twice if installing multiple extensions
 		if ( ! file_exists($this->dir . '/' . $this->installerName . '.xml'))
 		{
@@ -67,7 +72,7 @@ class plgautomsgsecureInstallerScript
             echo "You need install CG Secure";
         }
 
-		$db = Factory::getDbo();
+		$db = Factory::getContainer()->get(DatabaseInterface::class);
         $conditions = array(
             $db->qn('type') . ' = ' . $db->q('plugin'),
             $db->qn('folder') . ' = ' . $db->q('automsg'),
@@ -119,6 +124,27 @@ class plgautomsgsecureInstallerScript
 
 		return true;
 	}
+    // Check if CG Secure version passes minimum requirement
+    private function passMinimumSecureVersion()
+    {
+        $db = Factory::getContainer()->get(DatabaseInterface::class);
+        $query = $db->getQuery(true);
+        $query->select('manifest_cache');
+        $query->from($db->quoteName('#__extensions'));
+        $query->where('name = "CGSecure Library"');
+        $db->setQuery($query);
+        $manifest = json_decode($db->loadResult(), true);
+        if ($manifest['version'] < $this->min_secure_version) {
+            Factory::getApplication()->enqueueMessage(
+                'Incompatible CG Secure version : found  <strong>' . $manifest['version'] . '</strong>, Minimum <strong>' . $this->min_secure_version . '</strong>',
+                'error'
+            );
+            return false;
+        }
+        return true;
+    }
+
+    
 	private function uninstallInstaller()
 	{
 		if ( ! is_dir(JPATH_PLUGINS . '/system/' . $this->installerName)) {
@@ -128,7 +154,7 @@ class plgautomsgsecureInstallerScript
 			JPATH_PLUGINS . '/system/' . $this->installerName . '/language',
 			JPATH_PLUGINS . '/system/' . $this->installerName,
 		]);
-		$db = Factory::getDbo();
+		$db = Factory::getContainer()->get(DatabaseInterface::class);
 		$query = $db->getQuery(true)
 			->delete('#__extensions')
 			->where($db->quoteName('element') . ' = ' . $db->quote($this->installerName))

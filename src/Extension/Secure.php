@@ -12,7 +12,7 @@ defined('_JEXEC') or die('Restricted access');
 use Joomla\CMS\Plugin\CMSPlugin;
 use Joomla\CMS\Language\Text;
 use Joomla\Event\SubscriberInterface;
-use ConseilGouz\CGSecure\Helper\Cgipcheck;
+use ConseilGouz\CGSecure\Cgipcheck;
 
 class Secure extends CMSPlugin implements SubscriberInterface
 {
