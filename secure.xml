@@ -7,7 +7,7 @@
 	<authorUrl>www.conseilgouz.com</authorUrl>
 	<copyright>ConseilGouz</copyright>
 	<license>GNU/GPL</license>
-	<version>3.5.4</version>
+	<version>3.5.5</version>
 	<description>PLG_AUTOMSG_SECURE_DESCRIPTION</description>
 	<namespace path="src">ConseilGouz\Plugin\Automsg\Secure</namespace>
 	<scriptfile>script.php</scriptfile>
@@ -24,7 +24,7 @@
 	</languages>
 	<config>
 	<fields name="params">
-		<fieldset name="basic" addfieldprefix="ConseilGouz\Library\Field"">
+		<fieldset name="basic" addfieldprefix="ConseilGouz\Library\Field">
 				<field name="version" type="version" extension="plugin/automsg/secure" margintop="-4em"/>
 		</fieldset>
 	</fields>

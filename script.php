@@ -61,7 +61,7 @@ class plgautomsgsecureInstallerScript
 		}
 
         if (!$this->checkLibrary('conseilgouz')) { // need library installation
-            $ret = $this->installPackageCG('lib_conseilgouz');
+            $ret = $this->installPackage('lib_conseilgouz');
             if ($ret) {
                 Factory::getApplication()->enqueueMessage('ConseilGouz Library ' . $this->newlib_version . ' installed', 'notice');
             }
@@ -151,14 +151,13 @@ class plgautomsgsecureInstallerScript
         }
         return true;
     }
-    private function installLibrary()
+    private function installPackage($package)
     {
-        if (! $this->installPackage('library_automsg')) {
-            Factory::getApplication()->enqueueMessage(Text::_('ERROR_INSTALLATION_LIBRARY_FAILED'), 'error');
-            return false;
-        }
-        Factory::getCache()->clean('_system');
-        return true;
+        $tmpInstaller = new Joomla\CMS\Installer\Installer();
+        $db = Factory::getContainer()->get(DatabaseInterface::class);
+        $tmpInstaller->setDatabase($db);
+        $installed = $tmpInstaller->install($this->dir . '/' . $package);
+        return $installed;
     }
     private function checkLibrary($library)
     {
