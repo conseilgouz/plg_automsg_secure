@@ -1,6 +1,6 @@
 <?php
 /**
-* CG AUtoMsg Secure Plugin  - Joomla 4.x/5.x plugin
+* CG AUtoMsg Secure Plugin  - Joomla 4.x/5.x/6.x plugin
 * copyright 		: Copyright (C) 2025 ConseilGouz. All rights reserved.
 * license    		: https://www.gnu.org/licenses/gpl-3.0.html GNU/GPL
 */
@@ -22,6 +22,7 @@ class plgautomsgsecureInstallerScript
 	private $exttype                 = 'plugin';
 	private $extname                 = 'secure';
 	private $previous_version        = '';
+    private $newlib_version	         = '';
 	private $dir           = null;
 	private $installerName = 'plgautomsgsecureinstaller';
 	public function __construct()
@@ -59,12 +60,13 @@ class plgautomsgsecureInstallerScript
 			$this->postinstall_cleanup();
 		}
 
-		switch ($type) {
-            case 'install': $message = Text::_('SECURE_POSTFLIGHT_INSTALLED'); break;
-            case 'uninstall': $message = Text::_('SECURE_POSTFLIGHT_UNINSTALLED'); break;
-            case 'update': $message = Text::_('SECURE_POSTFLIGHT_UPDATED'); break;
-            case 'discover_install': $message = Text::_('SECURE_POSTFLIGHT_DISC_INSTALLED'); break;
+        if (!$this->checkLibrary('conseilgouz')) { // need library installation
+            $ret = $this->installPackageCG('lib_conseilgouz');
+            if ($ret) {
+                Factory::getApplication()->enqueueMessage('ConseilGouz Library ' . $this->newlib_version . ' installed', 'notice');
+            }
         }
+
 		return true;
     }
 	private function postinstall_cleanup() {
@@ -81,7 +83,7 @@ class plgautomsgsecureInstallerScript
         );
         $fields = array($db->qn('enabled') . ' = 1');
 
-        $query = $db->getQuery(true);
+        $query = $db->createQuery();
 		$query->update($db->quoteName('#__extensions'))->set($fields)->where($conditions);
 		$db->setQuery($query);
         try {
@@ -129,7 +131,7 @@ class plgautomsgsecureInstallerScript
     private function passMinimumSecureVersion()
     {
         $db = Factory::getContainer()->get(DatabaseInterface::class);
-        $query = $db->getQuery(true);
+        $query = $db->createQuery();
         $query->select('manifest_cache');
         $query->from($db->quoteName('#__extensions'));
         $query->where('name = "CGSecure Library"');
@@ -149,8 +151,42 @@ class plgautomsgsecureInstallerScript
         }
         return true;
     }
-
-    
+    private function installLibrary()
+    {
+        if (! $this->installPackage('library_automsg')) {
+            Factory::getApplication()->enqueueMessage(Text::_('ERROR_INSTALLATION_LIBRARY_FAILED'), 'error');
+            return false;
+        }
+        Factory::getCache()->clean('_system');
+        return true;
+    }
+    private function checkLibrary($library)
+    {
+        $file = $this->dir.'/lib_conseilgouz/conseilgouz.xml';
+        if (!is_file($file)) {// library not installed
+            return false;
+        }
+        $xml = simplexml_load_file($file);
+        $this->newlib_version = $xml->version;
+        $db = Factory::getContainer()->get(DatabaseInterface::class);
+        $conditions = array(
+             $db->qn('type') . ' = ' . $db->q('library'),
+             $db->qn('element') . ' = ' . $db->quote($library)
+            );
+        $query = $db->createQuery()
+                ->select('manifest_cache')
+                ->from($db->quoteName('#__extensions'))
+                ->where($conditions);
+        $db->setQuery($query);
+        $manif = $db->loadObject();
+        if ($manif) {
+            $manifest = json_decode($manif->manifest_cache);
+            if ($manifest->version >= $this->newlib_version) { // compare versions
+                return true; // library ok
+            }
+        }
+        return false; // need library
+    }
 	private function uninstallInstaller()
 	{
 		if ( ! is_dir(JPATH_PLUGINS . '/system/' . $this->installerName)) {
@@ -168,7 +204,8 @@ class plgautomsgsecureInstallerScript
 			->where($db->quoteName('type') . ' = ' . $db->quote('plugin'));
 		$db->setQuery($query);
 		$db->execute();
-		Factory::getCache()->clean('_system');
+		$cache = Factory::getContainer()->get(Joomla\CMS\Cache\CacheControllerFactoryInterface::class)->createCacheController();
+        $cache->clean('_system');
 	}
     public function delete($files = [])
     {

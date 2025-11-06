@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <extension group="automsg" method="upgrade" type="plugin" version="4">
 	<name>plg_automsg_secure</name>
-	<creationDate>2025-07-18</creationDate>
+	<creationDate>2025-11-06</creationDate>
 	<author>ConseilGouz</author>
 	<authorEmail></authorEmail>
 	<authorUrl>www.conseilgouz.com</authorUrl>
 	<copyright>ConseilGouz</copyright>
 	<license>GNU/GPL</license>
-	<version>3.5.3</version>
+	<version>3.5.4</version>
 	<description>PLG_AUTOMSG_SECURE_DESCRIPTION</description>
 	<namespace path="src">ConseilGouz\Plugin\Automsg\Secure</namespace>
 	<scriptfile>script.php</scriptfile>
@@ -24,8 +24,8 @@
 	</languages>
 	<config>
 	<fields name="params">
-		<fieldset name="basic" addfieldprefix="ConseilGouz\Plugin\Automsg\Secure\Field">
-				<field name="version" type="version" extension="secure" margintop="-4em" xml="/plugins/automsg/secure/secure.xml"/>
+		<fieldset name="basic" addfieldprefix="ConseilGouz\Library\Field"">
+				<field name="version" type="version" extension="plugin/automsg/secure" margintop="-4em"/>
 		</fieldset>
 	</fields>
 	</config>
